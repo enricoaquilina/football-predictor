@@ -118,8 +118,8 @@ rm(away_defence)
 rm(teams)
 
 #Do the Poisson probability matrix
-home_team <- 'Stoke'
-away_team <- 'Chelsea'
+home_team <- 'Napoli'
+away_team <- 'Juventus'
 
 home_idx <- which(power_table$Team == home_team)
 away_idx <- which(power_table$Team == away_team)
@@ -158,9 +158,37 @@ build_poisson_graph <- function() {
   graph <- matrix(, nrow = 10, ncol = 10)
   for(row in 1:nrow(graph)) {
     for(column in 1:ncol(graph)) {
+      #poisson_val <- poisson(home_goal_expectancy, away_goal_expectancy, row-1, column-1)
+      #graph[row, column] = format(round(poisson_val, 5), nsmall = 5)
       graph[row, column] = poisson(home_goal_expectancy, away_goal_expectancy, row-1, column-1)
     }
   }
 }
 
+get_prediction <- function() {
+  away_win_prob <- 0
+  draw_prob <- 0
+  home_win_prob <- 0
+  
+  for(row in 1:nrow(graph)) {
+    for(column in 1:ncol(graph)) {
+      if(column > row) {
+        away_win_prob <- away_win_prob + graph[row, column]
+      }else if(column == row){
+        draw_prob <- draw_prob + graph[row, column]
+      }else{
+        home_win_prob <- home_win_prob + graph[row, column]
+      }
+    }
+  }
+  ans = ''
+  if(away_win_prob > draw_prob && away_win_prob > home_win_prob) {
+    ans <- 'A'
+  }else if(draw_prob > home_win_prob && draw_prob > away_win_prob) {
+    ans <- 'D'
+  }else {
+    ans <- 'H'
+  }
+  return (ans)
+}
 

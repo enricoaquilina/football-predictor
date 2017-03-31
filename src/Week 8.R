@@ -118,8 +118,8 @@ rm(away_defence)
 rm(teams)
 
 #Do the Poisson probability matrix
-home_team <- 'Man City'
-away_team <- 'Liverpool'
+home_team <- 'Stoke'
+away_team <- 'Chelsea'
 
 home_idx <- which(power_table$Team == home_team)
 away_idx <- which(power_table$Team == away_team)
@@ -145,6 +145,22 @@ rm(home_idx)
 rm(away_idx)
 rm(home_team_data)
 rm(away_team_data)
-#poisson_calc <- 
+
+#Poisson Calculation
+poisson <- function(home_goal_expectancy, away_goal_expectancy, home_goals, away_goals) {
+  home_probability <- exp(1) ^ (-home_goal_expectancy) * home_goal_expectancy ^ (home_goals) / factorial(home_goals)
+  away_probability <- exp(1) ^ (-away_goal_expectancy) * away_goal_expectancy ^ (away_goals) / factorial(away_goals)
+  return(home_probability * away_probability)
+}
+
+#Build the Poisson probability matrix
+build_poisson_graph <- function() {
+  graph <- matrix(, nrow = 10, ncol = 10)
+  for(row in 1:nrow(graph)) {
+    for(column in 1:ncol(graph)) {
+      graph[row, column] = poisson(home_goal_expectancy, away_goal_expectancy, row-1, column-1)
+    }
+  }
+}
 
 

@@ -7,6 +7,7 @@ raw<-read.csv('/home/psycheyyy/Desktop/MSc/Statistics for Data Scientists/Week 8
 
 # This is the start of the HOME table
 home_matches_played = data.frame(table(raw$HomeTeam))
+teams = data.frame(home_matches_played$Var1)
 home_goals_scored <- data.frame(ddply(raw, 'HomeTeam', numcolwise(sum))[2])
 
 home_table <- data.frame(home_matches_played$Var1, home_matches_played$Freq, home_goals_scored)
@@ -53,7 +54,7 @@ away_home_goals_against <- data.frame(away_table[5]/away_table[2])
 away_table <- cbind(away_table, away_home_goals_against)
 rm(away_home_goals_against)
 
-#Doing the mean stuff for HOME Basic table
+#Doing the mean stuff for HOME table
 colnames(home_table) = c('','Home Goals Played', 'Home Goals For', 'Mean Home Goals For', 'Home Goals Against', 'Mean Home Goals Against')
 calculation_frame = data.frame('Total', sum(home_table$`Home Goals Played`), sum(home_table$`Home Goals For`), sum(home_table$`Mean Home Goals For`), sum(home_table$`Home Goals Against`), sum(home_table$`Mean Home Goals Against`))
 colnames(calculation_frame) = c('','Home Goals Played', 'Home Goals For', 'Mean Home Goals For', 'Home Goals Against', 'Mean Home Goals Against')
@@ -98,7 +99,8 @@ home_defence <- lapply(home_defence_list, function(x) x/home_defence_divisor)
 away_attack <- lapply(away_attack_list, function(x) x/away_attack_divisor)
 away_defence <- lapply(away_defence_list, function(x) x/away_defence_divisor)
 
-power_table <- data.frame(cbind(home_attack,home_defence,away_attack,away_defence))
+power_table <- data.frame(teams, cbind(home_attack,home_defence,away_attack,away_defence))
+colnames(power_table) <- c('Team', 'Home Attack', 'Home Defence', 'Away Attack', 'Away Defence')
 
 rm(no_of_teams)
 rm(home_attack_divisor)
@@ -113,7 +115,36 @@ rm(home_attack)
 rm(home_defence)
 rm(away_attack)
 rm(away_defence)
+rm(teams)
 
+#Do the Poisson probability matrix
+home_team <- 'Man City'
+away_team <- 'Liverpool'
 
+home_idx <- which(power_table$Team == home_team)
+away_idx <- which(power_table$Team == away_team)
+
+home_team_data <- power_table[home_idx,]
+colnames(home_team_data) <- c('Team', 'Home Attack', 'Home Defence', 'Away Attack', 'Away Defence')
+home_team_data <- data.frame(home_team_data$Team, home_team_data$`Home Attack`, home_team_data$`Home Defence`, home_team_data$`Away Attack`, home_team_data$`Away Defence`)
+colnames(home_team_data) <- c('Team', 'Home Attack', 'Home Defence', 'Away Attack', 'Away Defence')
+
+away_team_data <- power_table[away_idx,]
+colnames(away_team_data) <- c('Team', 'Home Attack', 'Home Defence', 'Away Attack', 'Away Defence')
+away_team_data <- data.frame(away_team_data$Team, away_team_data$`Home Attack`, away_team_data$`Home Defence`, away_team_data$`Away Attack`, away_team_data$`Away Defence`)
+colnames(away_team_data) <- c('Team', 'Home Attack', 'Home Defence', 'Away Attack', 'Away Defence')
+
+home_goal_expectancy <- home_team_data[2] * away_team_data[5] * home_table$`Mean Home Goals For`[nrow(home_table)]
+names(home_goal_expectancy) <- 'Home Goal Expectancy'
+away_goal_expectancy <- away_team_data[4] * home_team_data[3] * away_table$`Mean Away Goals For`[nrow(away_table)]
+names(away_goal_expectancy) <- 'Away Goal Expectancy'
+
+rm(home_team)
+rm(away_team)
+rm(home_idx)
+rm(away_idx)
+rm(home_team_data)
+rm(away_team_data)
+#poisson_calc <- 
 
 

@@ -1,53 +1,6 @@
 rm(list=ls())
 library(plyr)
 
-MeanComputation<-function(){
-  #Doing the mean stuff for HOME table
-  total_frame<-data.frame('Total', 
-                          TotalMatches=sum(home_table$TotalMatches), 
-                          Scored=sum(home_table$Scored), 
-                          Conceded=sum(home_table$Conceded), 
-                          MeanScored=sum(home_table$MeanScored), 
-                          MeanConceded=sum(home_table$MeanConceded))
-  
-  colnames(total_frame)<-c('','TotalMatches','Scored','Conceded','MeanScored','MeanConceded')
-  home_table<<-rbind(home_table,total_frame)
-
-  mean_frame<-data.frame(Mean='Mean', 
-                          total_frame$TotalMatches/no_of_teams, 
-                          total_frame$Scored/no_of_teams, 
-                          total_frame$Conceded/no_of_teams, 
-                          total_frame$MeanScored/no_of_teams, 
-                          total_frame$MeanConceded/no_of_teams)
-  
-  colnames(mean_frame)<-c('','TotalMatches','Scored','Conceded','MeanScored','MeanConceded')
-  home_table<<-rbind(home_table, mean_frame)
-  
-  rm(mean_frame)
-  rm(total_frame)
-  
-  #Doing the mean stuff for AWAY Basic table
-  total_frame=data.frame('Total',
-                         sum(away_table$TotalMatches), 
-                         sum(away_table$Scored), 
-                         sum(away_table$Conceded), 
-                         sum(away_table$MeanScored), 
-                         sum(away_table$MeanConceded))
-  colnames(total_frame)<-c('','TotalMatches', 'Scored', 'Conceded', 'MeanScored', 'MeanConceded')
-  away_table<<-rbind(away_table,total_frame)
-  
-  mean_frame=data.frame('Mean', 
-                        total_frame$TotalMatches/no_of_teams, 
-                        total_frame$Scored/no_of_teams, 
-                        total_frame$Conceded/no_of_teams, 
-                        total_frame$MeanScored/no_of_teams,
-                        total_frame$MeanConceded/no_of_teams)
-  colnames(mean_frame)<-c('','TotalMatches', 'Scored', 'Conceded', 'MeanScored', 'MeanConceded')
-  away_table<<-rbind(away_table,mean_frame)
-  
-  rm(mean_frame)
-  rm(total_frame)
-}
 ComputeBasicTables<-function(){
   raw<-read.csv('/home/enrico/Desktop/football-predictor/data/soccer.csv', header=TRUE, sep=',')
   
@@ -131,6 +84,53 @@ PowerTables<-function(){
   home_matches_played<<-NULL
   #rm(raw)
 }
+MeanComputation<-function(){
+  #Doing the mean stuff for HOME table
+  total_frame<-data.frame('Total', 
+                          TotalMatches=sum(home_table$TotalMatches), 
+                          Scored=sum(home_table$Scored), 
+                          Conceded=sum(home_table$Conceded), 
+                          MeanScored=sum(home_table$MeanScored), 
+                          MeanConceded=sum(home_table$MeanConceded))
+  
+  colnames(total_frame)<-c('','TotalMatches','Scored','Conceded','MeanScored','MeanConceded')
+  home_table<<-rbind(home_table,total_frame)
+  
+  mean_frame<-data.frame(Mean='Mean', 
+                         total_frame$TotalMatches/no_of_teams, 
+                         total_frame$Scored/no_of_teams, 
+                         total_frame$Conceded/no_of_teams, 
+                         total_frame$MeanScored/no_of_teams, 
+                         total_frame$MeanConceded/no_of_teams)
+  
+  colnames(mean_frame)<-c('','TotalMatches','Scored','Conceded','MeanScored','MeanConceded')
+  home_table<<-rbind(home_table, mean_frame)
+  
+  rm(mean_frame)
+  rm(total_frame)
+  
+  #Doing the mean stuff for AWAY Basic table
+  total_frame=data.frame('Total',
+                         sum(away_table$TotalMatches), 
+                         sum(away_table$Scored), 
+                         sum(away_table$Conceded), 
+                         sum(away_table$MeanScored), 
+                         sum(away_table$MeanConceded))
+  colnames(total_frame)<-c('','TotalMatches', 'Scored', 'Conceded', 'MeanScored', 'MeanConceded')
+  away_table<<-rbind(away_table,total_frame)
+  
+  mean_frame=data.frame('Mean', 
+                        total_frame$TotalMatches/no_of_teams, 
+                        total_frame$Scored/no_of_teams, 
+                        total_frame$Conceded/no_of_teams, 
+                        total_frame$MeanScored/no_of_teams,
+                        total_frame$MeanConceded/no_of_teams)
+  colnames(mean_frame)<-c('','TotalMatches', 'Scored', 'Conceded', 'MeanScored', 'MeanConceded')
+  away_table<<-rbind(away_table,mean_frame)
+  
+  rm(mean_frame)
+  rm(total_frame)
+}
 ExpectancyCalculation<-function(home, away){
   #Do the Poisson probability matrix
   home_team <- home
@@ -167,11 +167,12 @@ poisson <- function(home_goal_expectancy, away_goal_expectancy, home_goals, away
   return(home_probability * away_probability)
 }
 build_poisson_graph <- function() {
-  graph <<- matrix(, nrow = 10, ncol = 10)
+  graph <<- matrix(, nrow = 5, ncol = 5)
+  dimnames(graph)[[1]]<<-list('0','1','2','3','4')
+  dimnames(graph)[[2]]<<-list('0','1','2','3','4')
+  
   for(row in 1:nrow(graph)) {
     for(column in 1:ncol(graph)) {
-      #poisson_val <- poisson(home_goal_expectancy, away_goal_expectancy, row-1, column-1)
-      #graph[row, column] = format(round(poisson_val, 5), nsmall = 5)
       graph[row, column]<<-poisson(home_goal_expectancy, away_goal_expectancy, row-1, column-1)
     }
   }
@@ -180,6 +181,9 @@ get_prediction <- function(graph) {
   away_win_prob <- 0
   draw_prob <- 0
   home_win_prob <- 0
+  over_2_and_half_goals <- 0
+  under_2_and_half<-graph[[1]]+graph[[2]]+graph[[3]]+
+                    graph[[1,2]]+graph[[2,2]]+graph[[1,3]]
   
   for(row in 1:nrow(graph)) {
     for(column in 1:ncol(graph)) {
@@ -192,15 +196,20 @@ get_prediction <- function(graph) {
       }
     }
   }
-  ans = ''
-  if(away_win_prob > draw_prob && away_win_prob > home_win_prob) {
-    ans <- 'A'
-  }else if(draw_prob > home_win_prob && draw_prob > away_win_prob) {
-    ans <- 'D'
-  }else {
-    ans <- 'H'
+
+  for(row in 1:nrow(graph)) {
+    for(column in 1:ncol(graph)) {
+      if((column +row >= 5)) {
+        over_2_and_half_goals <- over_2_and_half_goals + graph[row, column]
+      }
+    }
   }
-  return (ans)
+  print(paste('Home win: ',home_win_prob*100, sep=''))
+  print(paste('Away win: ',away_win_prob*100, sep=''))
+  print(paste('Match draw: ',draw_prob*100, sep=''))
+  print(paste('Under 2.5 goals: ',under_2_and_half*100, sep=''))
+  print(paste('Over 2.5 goals: ',over_2_and_half_goals*100, sep=''))
+  
 }
 
 CrystalBall<-function(home, away){
@@ -209,9 +218,9 @@ CrystalBall<-function(home, away){
   ExpectancyCalculation(home,away)
   
   build_poisson_graph()
-  print(get_prediction(graph))
+  get_prediction(graph)
 }
 
 
 
-CrystalBall('Palermo','Cagliari')
+CrystalBall('Torino','Crotone')
